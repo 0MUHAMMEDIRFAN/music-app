@@ -6,15 +6,11 @@ import { useState, useEffect } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { Audio } from "expo-av";
 
+
 export default function HomeScreen() {
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState({
-    title: "Bohemian Rhapsody",
-    artist: "Queen",
-    albumArt:
-      "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=200&q=80",
-  });
+  const [currentTrack, setCurrentTrack] = useState();
   const [tracks, setTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sound, setSound] = useState(null);
@@ -62,46 +58,6 @@ export default function HomeScreen() {
         // Use demo tracks for web environment
         const demoTracks = [
           {
-            id: "1",
-            title: "Bohemian Rhapsody",
-            artist: "Queen",
-            album: "A Night at the Opera",
-            duration: "5:55",
-            albumArt:
-              "https://images.unsplash.com/photo-1629276301820-0f3eedc29fd0?w=300&q=80",
-            uri: "https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.mp3",
-          },
-          {
-            id: "2",
-            title: "Blinding Lights",
-            artist: "The Weeknd",
-            album: "After Hours",
-            duration: "3:20",
-            albumArt:
-              "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80",
-            uri: "https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand3.mp3",
-          },
-          {
-            id: "3",
-            title: "Shape of You",
-            artist: "Ed Sheeran",
-            album: "÷ (Divide)",
-            duration: "3:53",
-            albumArt:
-              "https://images.unsplash.com/photo-1619983081563-430f63602796?w=300&q=80",
-            uri: "https://www2.cs.uic.edu/~i101/SoundFiles/StarWars3.mp3",
-          },
-          {
-            id: "4",
-            title: "Bad Guy",
-            artist: "Billie Eilish",
-            album: "When We All Fall Asleep, Where Do We Go?",
-            duration: "3:14",
-            albumArt:
-              "https://images.unsplash.com/photo-1598387846148-47e82ee120cc?w=300&q=80",
-            uri: "https://www2.cs.uic.edu/~i101/SoundFiles/ImperialMarch60.mp3",
-          },
-          {
             id: "5",
             title: "Uptown Funk",
             artist: "Mark Ronson ft. Bruno Mars",
@@ -123,8 +79,11 @@ export default function HomeScreen() {
         const loadedTracks = await Promise.all(
           media.assets.map(async (asset) => {
             // Get a default album art image
-            const defaultAlbumArt =
-              "https://images.unsplash.com/photo-1614680376408-81e91ffe3db7?w=300&q=80";
+
+            // const defaultAlbumArt = Image.resolveAssetSource(musicIcon).uri;
+            const defaultAlbumArt = require("../assets/images/music-icon.png");
+
+            console.log(asset);
 
             return {
               id: asset.id,
@@ -132,8 +91,9 @@ export default function HomeScreen() {
               artist: "Unknown Artist", // In a real app, you'd extract this from metadata
               album: "Unknown Album", // In a real app, you'd extract this from metadata
               duration: formatDuration(asset.duration),
+              currentTime: formatDuration("00"),
               albumArt: defaultAlbumArt,
-              uri: asset.uri,
+              uri: asset.uri
             };
           }),
         );
@@ -166,11 +126,7 @@ export default function HomeScreen() {
         await sound.unloadAsync();
       }
 
-      setCurrentTrack({
-        title: track.title,
-        artist: track.artist,
-        albumArt: track.albumArt,
-      });
+      setCurrentTrack(track);
 
       // Load and play the track using the URI from the track object
       const { sound: newSound } = await Audio.Sound.createAsync(
@@ -210,7 +166,7 @@ export default function HomeScreen() {
               setTracks(tracks.filter((track) => track.id !== id));
             }}
             tracks={tracks.length > 0 ? tracks : undefined}
-            sortBy="artist"
+            sortBy="recent"
           />
         )}
       </View>
@@ -218,6 +174,7 @@ export default function HomeScreen() {
         isPlaying={isPlaying}
         currentTrack={currentTrack}
         onPlayPause={handlePlayPause}
+        sound={sound}
       />
     </View>
   );

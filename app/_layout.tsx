@@ -51,9 +51,9 @@ export default function RootLayout() {
             },
           })}
         >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ headerShown: true }} />
         </Stack>
-        <StatusBar style="light" />
+        <StatusBar style="auto"  />
       </SafeAreaView>
     </ThemeProvider>
   );

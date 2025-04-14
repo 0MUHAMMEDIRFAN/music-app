@@ -25,9 +25,9 @@ interface NowPlayingProps {
 
 const NowPlaying = ({
   isPlaying = false,
-  onPlayPause = () => {},
-  onNext = () => {},
-  onPrevious = () => {},
+  onPlayPause = () => { },
+  onNext = () => { },
+  onPrevious = () => { },
   currentTrack = {
     title: "Bohemian Rhapsody",
     artist: "Queen",
@@ -51,7 +51,7 @@ const NowPlaying = ({
       {/* Album Art */}
       <View className="items-center mt-8">
         <Image
-          source={{ uri: currentTrack.albumArt }}
+          source={currentTrack.albumArt}
           className="w-72 h-72 rounded-lg shadow-lg"
         />
       </View>

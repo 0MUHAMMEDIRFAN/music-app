@@ -15,13 +15,7 @@ const NowPlaying = () => {
   const params = useLocalSearchParams();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack] = useState({
-    title: "Bohemian Rhapsody",
-    artist: "Queen",
-    album: "A Night at the Opera",
-    albumArt:
-      "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=400&q=80",
-    duration: 355, // in seconds
-    currentTime: 127, // in seconds
+    ...params,
   });
 
   const formatTime = (seconds: number) => {
@@ -30,10 +24,17 @@ const NowPlaying = () => {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const progress = (currentTrack.currentTime / currentTrack.duration) * 100;
-
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying);
+  const progress = ((Number(currentTrack.currentTime) || 0) / (Number(currentTrack.duration) || 0)) * 100;
+  console.log(formatTime(currentTrack.duration))
+  const togglePlayback = async () => {
+    if (currentTrack.sound) {
+      if (isPlaying) {
+        await currentTrack.sound.pauseAsync();
+      } else {
+        await currentTrack.sound.playAsync();
+      }
+      setIsPlaying(!isPlaying);
+    };
   };
 
   return (
@@ -43,7 +44,7 @@ const NowPlaying = () => {
       {/* Album Art */}
       <View className="items-center mt-8">
         <Image
-          source={{ uri: currentTrack.albumArt }}
+          source={currentTrack.albumArt}
           className="w-72 h-72 rounded-lg shadow-lg"
         />
       </View>
@@ -68,10 +69,10 @@ const NowPlaying = () => {
         </View>
         <View className="flex-row justify-between mt-2">
           <Text className="text-gray-400">
-            {formatTime(currentTrack.currentTime)}
+            {currentTrack.currentTime}
           </Text>
           <Text className="text-gray-400">
-            {formatTime(currentTrack.duration)}
+            {currentTrack.duration}
           </Text>
         </View>
       </View>

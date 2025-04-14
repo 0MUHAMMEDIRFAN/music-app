@@ -28,55 +28,9 @@ type TrackListProps = {
 };
 
 const TrackList = ({
-  tracks = [
-    {
-      id: "1",
-      title: "Bohemian Rhapsody",
-      artist: "Queen",
-      album: "A Night at the Opera",
-      duration: "5:55",
-      albumArt:
-        "https://images.unsplash.com/photo-1629276301820-0f3eedc29fd0?w=300&q=80",
-    },
-    {
-      id: "2",
-      title: "Blinding Lights",
-      artist: "The Weeknd",
-      album: "After Hours",
-      duration: "3:20",
-      albumArt:
-        "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80",
-    },
-    {
-      id: "3",
-      title: "Shape of You",
-      artist: "Ed Sheeran",
-      album: "÷ (Divide)",
-      duration: "3:53",
-      albumArt:
-        "https://images.unsplash.com/photo-1619983081563-430f63602796?w=300&q=80",
-    },
-    {
-      id: "4",
-      title: "Bad Guy",
-      artist: "Billie Eilish",
-      album: "When We All Fall Asleep, Where Do We Go?",
-      duration: "3:14",
-      albumArt:
-        "https://images.unsplash.com/photo-1598387846148-47e82ee120cc?w=300&q=80",
-    },
-    {
-      id: "5",
-      title: "Uptown Funk",
-      artist: "Mark Ronson ft. Bruno Mars",
-      album: "Uptown Special",
-      duration: "4:30",
-      albumArt:
-        "https://images.unsplash.com/photo-1618609377864-68609b857e90?w=300&q=80",
-    },
-  ],
-  onTrackSelect = () => {},
-  onDeleteTrack = () => {},
+  tracks = undefined,
+  onTrackSelect = () => { },
+  onDeleteTrack = () => { },
   sortBy = "artist",
 }: TrackListProps) => {
   const router = useRouter();
@@ -136,7 +90,7 @@ const TrackList = ({
       onLongPress={() => handleLongPress(item)}
       delayLongPress={500}
     >
-      <Image source={{ uri: item.albumArt }} className="w-12 h-12 rounded-md" />
+      <Image source={item.albumArt} className="w-12 h-12 rounded-md" />
       <View className="flex-1 ml-3">
         <Text className="text-base font-medium text-gray-900" numberOfLines={1}>
           {item.title}
