@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
 import { Platform, SafeAreaView } from "react-native";
+import { PlayerProvider } from "./context/playerContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,26 +36,28 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={DefaultTheme}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Stack
-          screenOptions={({ route }) => ({
-            headerShown: !route.name.startsWith("tempobook"),
-            headerStyle: {
-              backgroundColor: "#111827", // Dark background to match the app theme
-            },
-            headerTintColor: "#fff", // White text
-            headerTitleStyle: {
-              fontWeight: "bold",
-            },
-            contentStyle: {
-              backgroundColor: "#fff",
-            },
-          })}
-        >
-          <Stack.Screen name="index" options={{ headerShown: true }} />
-        </Stack>
-        <StatusBar style="auto"  />
-      </SafeAreaView>
+      <PlayerProvider>
+        <SafeAreaView style={{ flex: 1 }}>
+          <Stack
+            screenOptions={({ route }) => ({
+              headerShown: !route.name.startsWith("tempobook"),
+              headerStyle: {
+                backgroundColor: "#111827", // Dark background to match the app theme
+              },
+              headerTintColor: "#fff", // White text
+              headerTitleStyle: {
+                fontWeight: "bold",
+              },
+              contentStyle: {
+                backgroundColor: "#fff",
+              },
+            })}
+          >
+            <Stack.Screen name="index" options={{ headerShown: true, title: "Zer0 Music" }} />
+          </Stack>
+          <StatusBar style="auto" animated />
+        </SafeAreaView>
+      </PlayerProvider>
     </ThemeProvider>
   );
 }

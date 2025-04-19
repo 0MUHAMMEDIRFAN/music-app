@@ -9,16 +9,10 @@ import {
 } from "react-native";
 import { Play, MoreVertical, Clock3 } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import { formatDuration } from "../utils/formats";
+import { Track } from "../types";
 
-type Track = {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  duration: string;
-  albumArt: string;
-  uri?: string; // URI for the audio file
-};
+
 
 type TrackListProps = {
   tracks?: Track[];
@@ -28,7 +22,7 @@ type TrackListProps = {
 };
 
 const TrackList = ({
-  tracks = undefined,
+  tracks = [],
   onTrackSelect = () => { },
   onDeleteTrack = () => { },
   sortBy = "artist",
@@ -42,13 +36,13 @@ const TrackList = ({
   const handleLongPress = (track: Track) => {
     Alert.alert("Track Options", `${track.title} by ${track.artist}`, [
       {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
         text: "Delete",
         style: "destructive",
         onPress: () => confirmDelete(track),
-      },
-      {
-        text: "Cancel",
-        style: "cancel",
       },
     ]);
   };
@@ -59,13 +53,13 @@ const TrackList = ({
       `Are you sure you want to delete "${track.title}"? This cannot be undone.`,
       [
         {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
           text: "Delete",
           style: "destructive",
           onPress: () => onDeleteTrack(track.id),
-        },
-        {
-          text: "Cancel",
-          style: "cancel",
         },
       ],
     );
@@ -90,7 +84,7 @@ const TrackList = ({
       onLongPress={() => handleLongPress(item)}
       delayLongPress={500}
     >
-      <Image source={item.albumArt} className="w-12 h-12 rounded-md" />
+      <Image source={item.albumArt} className="w-12 h-12 rounded-sm" />
       <View className="flex-1 ml-3">
         <Text className="text-base font-medium text-gray-900" numberOfLines={1}>
           {item.title}
@@ -100,7 +94,7 @@ const TrackList = ({
         </Text>
       </View>
       <View className="flex-row items-center">
-        <Text className="text-sm text-gray-500 mr-3">{item.duration}</Text>
+        <Text className="text-sm text-gray-500 mr-3">{formatDuration(item.duration)}</Text>
         <TouchableOpacity onPress={() => handleLongPress(item)} className="p-1">
           <MoreVertical size={20} color="#6b7280" />
         </TouchableOpacity>
@@ -125,7 +119,7 @@ const TrackList = ({
           renderItem={renderTrackItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 80 }} // Space for mini player
+        // contentContainerStyle={{ paddingBottom: 80 }} // Space for mini player
         />
       )}
     </View>

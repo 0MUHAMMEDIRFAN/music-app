@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import Slider from '@react-native-community/slider'
 import {
   Play,
   Pause,
@@ -9,33 +10,69 @@ import {
   Volume2,
 } from "lucide-react-native";
 import { Stack } from "expo-router";
+import { formatDuration } from "./utils/formats";
+import { Audio } from "expo-av";
+import { usePlayer } from "./context/playerContext";
+
 
 const NowPlaying = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack] = useState({
-    ...params,
-  });
+  const { isPlaying, togglePlayPause, currentTrack, sound } = usePlayer()
+  const [currentVolume, setCurrentVolume] = useState(0); // Default volume to 1 (max)
+  const [currentProgress, setCurrentProgress] = useState(0);
+  const [progressValue, setProgressValue] = useState(0);
+  // console.log(currentTrack.duration)
+  // console.log(currentProgress)
+  // console.log(progressValue)
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
-
-  const progress = ((Number(currentTrack.currentTime) || 0) / (Number(currentTrack.duration) || 0)) * 100;
-  console.log(formatTime(currentTrack.duration))
-  const togglePlayback = async () => {
-    if (currentTrack.sound) {
-      if (isPlaying) {
-        await currentTrack.sound.pauseAsync();
-      } else {
-        await currentTrack.sound.playAsync();
+  useEffect(() => {
+    const setUpAudio = async () => {
+      const status = await sound.getStatusAsync();
+      console.log(status)
+      if (status.isLoaded) {
+        setCurrentVolume(status.volume);
+        setCurrentProgress(status.positionMillis)
+        setProgressValue(Math.floor(100 * (Number(status.positionMillis))) / (Number(currentTrack.duration)));
       }
-      setIsPlaying(!isPlaying);
     };
-  };
+    if (sound) {
+      setUpAudio();
+    }
+  }, []);
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    const updateProgress = async () => {
+      if (sound) {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && status.isPlaying) {
+          setCurrentProgress(status.positionMillis);
+          setProgressValue(
+            Math.floor(100 * Number(status.positionMillis) / Number(currentTrack.duration))
+          );
+        }
+      }
+    };
+
+    if (sound) {
+      interval = setInterval(updateProgress, 1000);
+    }
+
+    return () => {
+      console.log("hey")
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [sound, currentTrack]);
+  // const [currentTrack] = useState({
+  //   ...params,
+  // });
+
+
+
+
 
   return (
     <View className="flex-1 bg-gray-900 p-6 justify-between">
@@ -45,7 +82,7 @@ const NowPlaying = () => {
       <View className="items-center mt-8">
         <Image
           source={currentTrack.albumArt}
-          className="w-72 h-72 rounded-lg shadow-lg"
+          className="w-72 h-72 object-contain bg-gray-200 rounded-lg shadow-lg"
         />
       </View>
 
@@ -64,15 +101,26 @@ const NowPlaying = () => {
 
       {/* Progress Bar */}
       <View className="mt-8">
-        <View className="h-1 bg-gray-700 rounded-full overflow-hidden">
-          <View className="h-full bg-white" style={{ width: `${progress}%` }} />
-        </View>
+        <Slider
+          style={{ width: "100%", height: 40 }}
+          minimumValue={0}
+          maximumValue={1}
+          value={progressValue / 100}
+          minimumTrackTintColor="#FFFFFF"
+          maximumTrackTintColor="#707070"
+          thumbTintColor="#FFFFFF"
+          onSlidingComplete={(value) => {
+            const newProgress = value * currentTrack.duration;
+            setCurrentProgress(newProgress);
+            sound.setPositionAsync(newProgress);
+          }}
+        />
         <View className="flex-row justify-between mt-2">
           <Text className="text-gray-400">
-            {currentTrack.currentTime}
+            {formatDuration(currentProgress)}
           </Text>
           <Text className="text-gray-400">
-            {currentTrack.duration}
+            {formatDuration(currentTrack.duration)}
           </Text>
         </View>
       </View>
@@ -84,7 +132,7 @@ const NowPlaying = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={togglePlayback}
+          onPress={togglePlayPause}
           className="w-20 h-20 rounded-full bg-white items-center justify-center mx-8"
         >
           {isPlaying ? (
@@ -99,13 +147,26 @@ const NowPlaying = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Volume Control */}
+      {/* 
+      // Volume Control
       <View className="flex-row items-center mb-8">
         <Volume2 size={20} color="#fff" />
         <View className="h-1 bg-gray-700 rounded-full overflow-hidden flex-1 mx-4">
-          <View className="h-full bg-white w-3/4" />
+          <Slider
+            style={{ flex: 1, height: 40 }}
+            minimumValue={0}
+            maximumValue={1}
+            value={currentVolume}
+            minimumTrackTintColor="#FFFFFF"
+            maximumTrackTintColor="#707070"
+            thumbTintColor="#FFFFFF"
+            onValueChange={(value) => {
+              setCurrentVolume(value);
+              Audio.setVolumeAsync(value);
+            }}
+          />
         </View>
-      </View>
+      </View> */}
     </View>
   );
 };

@@ -3,9 +3,9 @@
     "name": "zero-music",
     "slug": "music-app",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/music-icon.png",
-    "scheme": "zero",
+    "orientation": "default",
+    "icon": "./assets/images/music.jpeg",
+    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -13,10 +13,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/music-icon.png",
+        "foregroundImage": "./assets/images/music.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "android.zero.music"
+      "package": "com.zero.music"
     },
     "web": {
       "bundler": "metro",
@@ -28,8 +28,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/music-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/music.jpeg",
+          "imageWidth": 100,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

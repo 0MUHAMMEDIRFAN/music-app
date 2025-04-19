@@ -2,14 +2,11 @@ import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Play, Pause, SkipBack, SkipForward } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import { Track } from "../types";
 
 interface MiniPlayerProps {
   isPlaying?: boolean;
-  currentTrack?: {
-    title: string;
-    artist: string;
-    albumArt: string;
-  };
+  currentTrack?: Track | null;
   onPlayPause?: () => void;
   onNext?: () => void;
   onPrevious?: () => void;
@@ -45,7 +42,7 @@ const MiniPlayer = ({
         >
           <Image
             source={currentTrack?.albumArt}
-            className="w-12 h-12 rounded-md mr-3"
+            className="w-12 h-12 bg-gray-200 rounded-md mr-3"
           />
           <View className="flex-1 pr-2">
             <Text className="text-white font-medium text-sm" numberOfLines={1}>

@@ -1,20 +1,84 @@
-import { View, Text, TouchableOpacity, Alert, Platform } from "react-native";
-import { useRouter } from "expo-router";
-import TrackList from "./components/TrackList";
+import { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, Alert, Platform, FlatList, Image } from "react-native";
 import MiniPlayer from "./components/MiniPlayer";
-import { useState, useEffect } from "react";
-import * as MediaLibrary from "expo-media-library";
+import { formatDuration } from "./utils/formats";
+import TrackList from "./components/TrackList";
 import { Audio } from "expo-av";
+import * as MediaLibrary from "expo-media-library";
+import { router, useRouter } from "expo-router";
+import { usePlayer } from "./context/playerContext";
 
-
-export default function HomeScreen() {
+const HomePage = () => {
   const router = useRouter();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState();
-  const [tracks, setTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sound, setSound] = useState(null);
-  const [permissionStatus, setPermissionStatus] = useState(null);
+  const [activeTab, setActiveTab] = useState("Tracks");
+  const [tracks, setTracks] = useState([]);
+  const { isPlaying, currentTrack, sound, playTrack, togglePlayPause, setPermissionStatus } = usePlayer()
+
+
+  const PlayPrevSong = () => {
+    if (tracks.length > 0 && currentTrack) {
+      const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
+      if (currentIndex > 0) {
+        playTrack(tracks[currentIndex - 1]);
+      }
+    }
+  }
+  const PlayNextSong = () => {
+    if (tracks.length > 0 && currentTrack) {
+      const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
+      if (currentIndex > 0) {
+        playTrack(tracks[currentIndex + 1]);
+      }
+    }
+  }
+
+
+  // Load music tracks from media library
+  const loadMusicTracks = async () => {
+    try {
+      setIsLoading(true);
+      // For native mobile platforms, use MediaLibrary
+      const media = await MediaLibrary.getAssetsAsync({
+        mediaType: MediaLibrary.MediaType.audio,
+        first: Number.MAX_SAFE_INTEGER, // Fetch all available audio assets
+        sortBy: [MediaLibrary.SortBy.creationTime], // Sort by recent
+      });
+      // Add tabs for Tracks and Folders below the header
+
+
+      const loadedTracks = await Promise.all(
+        media.assets.map(async (asset) => {
+          // Get a default album art image
+
+          // const defaultAlbumArt = Image.resolveAssetSource(musicIcon).uri;
+          const defaultAlbumArt = require("../assets/images/music.jpeg");
+          const folderName = asset.uri.split("/").slice(-2, -1)[0]; // Extract parent folder name
+
+          // console.log(asset);
+
+          return {
+            id: asset.id,
+            title: asset.filename.replace(/\.[^/.]+$/, ""), // Remove file extension
+            artist: "Unknown Artist", // In a real app, you'd extract this from metadata
+            album: "Unknown Album", // In a real app, you'd extract this from metadata
+            duration: asset.duration * 1000,
+            currentTime: formatDuration("00"),
+            albumArt: defaultAlbumArt,
+            uri: asset.uri,
+            folder: folderName, // Add parent folder name
+          };
+        }),
+      );
+      setTracks(loadedTracks);
+
+    } catch (error) {
+      console.error("Error loading music tracks:", error);
+      Alert.alert("Error", "Failed to load music tracks from your device.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Request media library permissions
   useEffect(() => {
@@ -35,122 +99,33 @@ export default function HomeScreen() {
 
     // Cleanup function for sound object
     return () => {
+
       if (sound) {
         sound.unloadAsync();
       }
     };
   }, []);
 
-  // Format duration from seconds to mm:ss
-  const formatDuration = (durationInSeconds) => {
-    if (!durationInSeconds) return "0:00";
-    const minutes = Math.floor(durationInSeconds / 60);
-    const seconds = Math.floor(durationInSeconds % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
-
-  // Load music tracks from media library
-  const loadMusicTracks = async () => {
-    try {
-      setIsLoading(true);
-
-      if (Platform.OS === "web") {
-        // Use demo tracks for web environment
-        const demoTracks = [
-          {
-            id: "5",
-            title: "Uptown Funk",
-            artist: "Mark Ronson ft. Bruno Mars",
-            album: "Uptown Special",
-            duration: "4:30",
-            albumArt:
-              "https://images.unsplash.com/photo-1618609377864-68609b857e90?w=300&q=80",
-            uri: "https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.mp3",
-          },
-        ];
-        setTracks(demoTracks);
-      } else {
-        // For native mobile platforms, use MediaLibrary
-        const media = await MediaLibrary.getAssetsAsync({
-          mediaType: MediaLibrary.MediaType.audio,
-          first: 50,
-        });
-
-        const loadedTracks = await Promise.all(
-          media.assets.map(async (asset) => {
-            // Get a default album art image
-
-            // const defaultAlbumArt = Image.resolveAssetSource(musicIcon).uri;
-            const defaultAlbumArt = require("../assets/images/music-icon.png");
-
-            console.log(asset);
-
-            return {
-              id: asset.id,
-              title: asset.filename.replace(/\.[^/.]+$/, ""), // Remove file extension
-              artist: "Unknown Artist", // In a real app, you'd extract this from metadata
-              album: "Unknown Album", // In a real app, you'd extract this from metadata
-              duration: formatDuration(asset.duration),
-              currentTime: formatDuration("00"),
-              albumArt: defaultAlbumArt,
-              uri: asset.uri
-            };
-          }),
-        );
-
-        setTracks(loadedTracks);
-      }
-    } catch (error) {
-      console.error("Error loading music tracks:", error);
-      Alert.alert("Error", "Failed to load music tracks from your device.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePlayPause = async () => {
-    if (sound) {
-      if (isPlaying) {
-        await sound.pauseAsync();
-      } else {
-        await sound.playAsync();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleTrackSelect = async (track: any) => {
-    try {
-      // Unload previous sound if it exists
-      if (sound) {
-        await sound.unloadAsync();
-      }
-
-      setCurrentTrack(track);
-
-      // Load and play the track using the URI from the track object
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: track.uri },
-        { shouldPlay: true },
-      );
-
-      setSound(newSound);
-      setIsPlaying(true);
-
-      // Listen for playback status updates
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          setIsPlaying(false);
-        }
-      });
-    } catch (error) {
-      console.error("Error playing track:", error);
-      Alert.alert("Playback Error", "Failed to play the selected track.");
-    }
-  };
 
   return (
     <View className="flex-1 bg-white">
+      <View className="flex-row justify-around bg-gray-200 p-2">
+        <TouchableOpacity
+          onPress={() => setActiveTab("Tracks")}
+          className={`flex-1 items-center p-2 ${activeTab === "Tracks" ? "bg-white" : "bg-gray-200"
+            }`}
+        >
+          <Text className="text-base font-medium">Tracks</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setActiveTab("Folders")}
+          className={`flex-1 items-center p-2 ${activeTab === "Folders" ? "bg-white" : "bg-gray-200"
+            }`}
+        >
+          <Text className="text-base font-medium">Folders</Text>
+        </TouchableOpacity>
+      </View>
+
       <View className="flex-1">
         {isLoading ? (
           <View className="flex-1 justify-center items-center p-4">
@@ -158,24 +133,65 @@ export default function HomeScreen() {
               Loading music library...
             </Text>
           </View>
-        ) : (
-          <TrackList
-            onTrackSelect={handleTrackSelect}
-            onDeleteTrack={(id) => {
-              // Filter out the deleted track
-              setTracks(tracks.filter((track) => track.id !== id));
-            }}
-            tracks={tracks.length > 0 ? tracks : undefined}
-            sortBy="recent"
-          />
-        )}
+        ) :
+          (
+            <View className="flex-1">{activeTab === "Tracks" ?
+              <TrackList
+                onTrackSelect={playTrack}
+                onDeleteTrack={(id) => {
+                  setTracks(tracks.filter((track) => track.id !== id));
+                }}
+                tracks={tracks.length > 0 ? tracks : undefined}
+                sortBy="recent"
+              />
+              : activeTab === "Folders" &&
+              <View className="flex-1">
+                {tracks.length > 0 ? (
+                  <FlatList
+                    data={[...new Set(tracks.map((track) => track.folder))]}
+                    renderItem={(folder) =>
+                      <TouchableOpacity
+                        key={folder.item}
+                        onPress={() => {
+                          // Navigate to the full player view with track info
+                          // const folderTracks = tracks.filter((track) => track.folder === folder.item);
+                          router.push({
+                            pathname: "/folder-view",
+                            params: { folderName: folder.item },
+                          });
+                        }}
+                        className="flex-row items-center p-3 border-b border-gray-200 bg-white"
+                      >
+                        <Image source={require("../assets/images/folder.jpeg")} className="w-12 h-12 rounded-sm " />
+                        <View className="flex-1 ml-3">
+                          <Text className="text-lg font-medium">{folder.item}</Text>
+                        </View>
+
+                      </TouchableOpacity>
+                    }
+                    // contentContainerStyle={{ paddingBottom: 80 }} // Space for mini player
+                    showsVerticalScrollIndicator={false}
+
+                  />
+                ) : (
+                  <View className="flex-1 justify-center items-center p-4">
+                    <Text className="text-lg text-gray-500">No folders available.</Text>
+                  </View>
+                )}
+              </View>}
+            </View>
+          )}
       </View>
       <MiniPlayer
         isPlaying={isPlaying}
         currentTrack={currentTrack}
-        onPlayPause={handlePlayPause}
+        onPlayPause={togglePlayPause}
+        onPrevious={PlayPrevSong}
+        onNext={PlayNextSong}
         sound={sound}
       />
     </View>
-  );
+  )
 }
+
+export default HomePage;
