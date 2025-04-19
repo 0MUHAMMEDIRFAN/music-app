@@ -18,7 +18,7 @@ import { usePlayer } from "./context/playerContext";
 const NowPlaying = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { isPlaying, togglePlayPause, currentTrack, sound } = usePlayer()
+  const { isPlaying, togglePlayPause, currentTrack, sound, PlayNextSong, PlayPrevSong } = usePlayer()
   const [currentVolume, setCurrentVolume] = useState(0); // Default volume to 1 (max)
   const [currentProgress, setCurrentProgress] = useState(0);
   const [progressValue, setProgressValue] = useState(0);
@@ -127,7 +127,9 @@ const NowPlaying = () => {
 
       {/* Playback Controls */}
       <View className="flex-row justify-center items-center mt-8 mb-12">
-        <TouchableOpacity className="p-4">
+        <TouchableOpacity
+          onPress={PlayPrevSong}
+          className="p-4">
           <SkipBack size={32} color="#fff" />
         </TouchableOpacity>
 
@@ -142,7 +144,9 @@ const NowPlaying = () => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity className="p-4">
+        <TouchableOpacity
+          onPress={PlayNextSong}
+          className="p-4">
           <SkipForward size={32} color="#fff" />
         </TouchableOpacity>
       </View>

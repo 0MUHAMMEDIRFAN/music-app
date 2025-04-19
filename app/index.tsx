@@ -12,27 +12,7 @@ const HomePage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Tracks");
-  const [tracks, setTracks] = useState([]);
-  const { isPlaying, currentTrack, sound, playTrack, togglePlayPause, setPermissionStatus } = usePlayer()
-
-
-  const PlayPrevSong = () => {
-    if (tracks.length > 0 && currentTrack) {
-      const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
-      if (currentIndex > 0) {
-        playTrack(tracks[currentIndex - 1]);
-      }
-    }
-  }
-  const PlayNextSong = () => {
-    if (tracks.length > 0 && currentTrack) {
-      const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
-      if (currentIndex > 0) {
-        playTrack(tracks[currentIndex + 1]);
-      }
-    }
-  }
-
+  const { isPlaying, currentTrack, sound, playTrack, togglePlayPause, setPermissionStatus, tracks, setTracks ,PlayNextSong,PlayPrevSong} = usePlayer()
 
   // Load music tracks from media library
   const loadMusicTracks = async () => {

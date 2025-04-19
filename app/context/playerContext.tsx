@@ -11,6 +11,10 @@ type PlayerContextType = {
   setPermissionStatus: (status: boolean) => void;
   playTrack: (track: Track) => void;
   togglePlayPause: () => void;
+  tracks: Track[];
+  setTracks: React.Dispatch<React.SetStateAction<never[]>>;
+  PlayPrevSong: () => void;
+  PlayNextSong: () => void;
 };
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -20,6 +24,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [permissionStatus, setPermissionStatus] = useState<boolean>(false);
+  const [tracks, setTracks] = useState([]);
 
 
   const playTrack = async (track: Track) => {
@@ -77,9 +82,25 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
   };
+  const PlayPrevSong = () => {
+    if (tracks.length > 0 && currentTrack) {
+      const currentIndex = tracks.findIndex((track:Track) => track.id === currentTrack.id);
+      if (currentIndex > 0) {
+        playTrack(tracks[currentIndex - 1]);
+      }
+    }
+  }
+  const PlayNextSong = () => {
+    if (tracks.length > 0 && currentTrack) {
+      const currentIndex = tracks.findIndex((track:Track) => track.id === currentTrack.id);
+      if (currentIndex > 0) {
+        playTrack(tracks[currentIndex + 1]);
+      }
+    }
+  }
 
   return (
-    <PlayerContext.Provider value={{ isPlaying, currentTrack, sound, permissionStatus, setPermissionStatus, playTrack, togglePlayPause }}>
+    <PlayerContext.Provider value={{ isPlaying, currentTrack, sound, permissionStatus, setPermissionStatus, playTrack, togglePlayPause, tracks, setTracks, PlayPrevSong, PlayNextSong }}>
       {children}
     </PlayerContext.Provider>
   );
